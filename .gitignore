@@ -1,2 +1,4 @@
-loval.*
-
+local.*
+*.pyc
+.idea 
+*.swp

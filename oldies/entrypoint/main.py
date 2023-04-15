@@ -1,9 +1,10 @@
 import sys
+from oldies.core.ui.main_app import OldiesApp
 
 
 def main(argv=None):
-    print(f"Start.")
-    print(argv)
+    app = OldiesApp()
+    app.mainloop()
 
 
 if __name__ == "__main__":

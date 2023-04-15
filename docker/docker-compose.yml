@@ -2,6 +2,7 @@ version: "3.7"
 
 services:
   mongodb:
+    container_name: "oldies_db"
     image: mongo:3.6
     restart: always
     environment:
