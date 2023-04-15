@@ -1,0 +1,11 @@
+- [] Login
+	- [] angajati
+		- [] nume 
+		- [] username 
+		- [] parola  
+		- [] inregistrare comanda 
+			- lista de preparate 
+	- [] admin 
+		- [] gestioneaza menu-ul 
+			- (nume, preparet, pret, stoc)
+- [] 
