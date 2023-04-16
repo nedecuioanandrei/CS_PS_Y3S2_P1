@@ -1,6 +1,6 @@
 class OrderService:
-    def __init__(self):
-        pass
+    def __init__(self, order_repo):
+        self.order_repo = order_repo
 
     def add_order(self, dish_list):
         pass

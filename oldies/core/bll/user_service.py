@@ -1,5 +1,5 @@
 import hashlib
-from oldies.core.entities.user import User
+from oldies.core.entities.user import (Role, User)
 
 
 class UserService:
@@ -8,9 +8,13 @@ class UserService:
 
     @staticmethod
     def _encrypt_password(password):
-        return hashlib.shake_256(bytes(password, "utf-8"))
+        return hashlib.sha256(bytes(password, "utf-8")).hexdigest()
 
     def login(self, username, password) -> User:
-        pass
+        return self.user_repo.find(username, self._encrypt_password(password))
 
+    def create_user(self, user: User, password):
+        return self.user_repo.insert(user, self._encrypt_password(password))
 
+    def list(self):
+        return self.user_repo.list()

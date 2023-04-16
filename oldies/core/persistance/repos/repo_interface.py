@@ -13,6 +13,3 @@ class IRepo:
 
     def delete(self, *args, **kwargs):
         raise NotImplementedError()
-
-    def save(self):
-        raise NotImplementedError()
