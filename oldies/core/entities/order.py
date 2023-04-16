@@ -9,7 +9,7 @@ class Status(Enum):
 
 
 class Order:
-    def __init__(self, dish_list):
+    def __init__(self, dish_list, status=None, timestamp=None):
         self.dish_list = dish_list
-        self.status = Status.NEW
-        self.timestamp = datetime.now()
+        self.status = status or Status.NEW
+        self.timestamp = timestamp or datetime.now()

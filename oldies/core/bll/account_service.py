@@ -1,5 +1,6 @@
 from oldies.core.entities.user import (Role, User)
 
+
 class AccountService:
     def __init__(self, user_repo):
         self.user_repo = user_repo

@@ -16,5 +16,7 @@ class UserService:
     def create_user(self, user: User, password):
         return self.user_repo.insert(user, self._encrypt_password(password))
 
+
+
     def list(self):
         return self.user_repo.list()

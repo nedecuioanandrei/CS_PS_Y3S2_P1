@@ -21,4 +21,4 @@ class User:
         self.role = role
 
     def __str__(self):
-        return f"Name: {self.name}\nFirstname: {self.first_name}\nUsername: {self.name}\nRole: {self.role}\n"
+        return f"Name: {self.name}\nFirstname: {self.first_name}\nUsername: {self.username}\nRole: {self.role}\n"

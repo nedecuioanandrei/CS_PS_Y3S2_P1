@@ -21,12 +21,10 @@ class OldiesApp(tk.Tk):
 
     def _init_service(self):
         self.user = None
-
         self.repo_factory = RepoFactory(context)
-
         self.account_service = AccountService(user_repo=self.repo_factory.get_user_repo())
         self.order_service = OrderService(order_repo=self.repo_factory.get_order_repo())
-        self.menu_service = MenuService(menu_repo=self.repo_factory.get_menu_repo())
+        self.menu_service = MenuService(menu_repo=self.repo_factory.get_dish_repo())
         self.user_service = UserService(user_repo=self.repo_factory.get_user_repo())
 
     def __init__(self, *args, **kwargs):
@@ -103,7 +101,7 @@ class LoginPage(tk.Frame):
             messagebox.showerror(title="Login Error", message="Wrong username/password")
             return
 
-        if (self.controller.user.role == Role.EMPLOYEE):
+        if self.controller.user.role == Role.EMPLOYEE:
             self.controller.show_employee_page()
         else:
             self.controller.show_admin_page()
@@ -115,6 +113,141 @@ class LoginPage(tk.Frame):
 
 # second window frame page1
 class AdminPage(tk.Frame):
+
+    def _init_user_management_frame(self, controller):
+        scroll = tk.Scrollbar(controller)
+        scroll.grid(row=0, column=0)
+        table = ttk.Treeview(scroll, yscrollcommand=scroll.set, xscrollcommand=scroll.set)
+        table.grid(row=1, column=0)
+
+        scroll.config(command=table.yview)
+        scroll.config(command=table.xview)
+
+        # define our column
+        table['columns'] = ('Name', 'First_name', "Username", 'Role')
+
+        # format our column
+        table.column("#0", width=0, stretch=tk.NO)
+        table.column("Name", anchor=tk.CENTER)
+        table.column("First_name", anchor=tk.CENTER)
+        table.column("Username", anchor=tk.CENTER)
+        table.column("Role", anchor=tk.CENTER)
+
+        # Create Headings
+        table.heading("#0", text="", anchor=tk.CENTER)
+        table.heading("Name", text="Name", anchor=tk.CENTER)
+        table.heading("First_name", text="First_name", anchor=tk.CENTER)
+        table.heading("Username", text="Username", anchor=tk.CENTER)
+        table.heading("Role", text="Role", anchor=tk.CENTER)
+
+        fr = tk.Frame(controller)
+        fr.grid(row=2, column=0)
+
+        name = tk.Label(fr, text="Name")
+        name.grid(row=3, column=1)
+
+        first_name = tk.Label(fr, text="Firstname")
+        first_name.grid(row=3, column=2)
+
+        username = tk.Label(fr, text="Username")
+        username.grid(row=3, column=3)
+
+        role = tk.Label(fr, text="Role")
+        role.grid(row=3, column=4)
+
+        password = tk.Label(fr, text="Password")
+        password.grid(row=3, column=5)
+
+        name_entry = tk.Entry(fr)
+        name_entry.grid(row=1, column=1)
+
+        first_name_entry = tk.Entry(fr)
+        first_name_entry.grid(row=1, column=2)
+
+        username_entry = tk.Entry(fr)
+        username_entry.grid(row=1, column=3)
+
+        role_entry = tk.Entry(fr)
+        role_entry.grid(row=1, column=4)
+
+        password_entry = tk.Entry(fr)
+        password_entry.grid(row=1, column=5)
+
+        def update_table_content():
+            users = self.controller.user_service.list()
+            iid = 1
+            for user in users:
+                table.insert(parent="", index="end", iid=iid, text="",
+                             values=(user.name, user.first_name, user.username, user.role))
+                iid += 1
+
+        update_table_content()
+
+        def select_record():
+            # clear entry boxes
+            name_entry.delete(0, tk.END)
+            first_name_entry.delete(0, tk.END)
+            username_entry.delete(0, tk.END)
+            role_entry.delete(0, tk.END)
+            password_entry.delete(0, tk.END)
+
+            # grab record
+            selected = table.focus()
+            # grab record values
+            values = table.item(selected, 'values')
+            # temp_label.config(text=selected
+
+            # user service call
+
+            # output to entry boxes
+            name_entry.insert(0, values[0])
+            first_name_entry.insert(0, values[1])
+            username_entry.insert(0, values[2])
+            role_entry.insert(0, values[3])
+
+        def update_record():
+            selected = table.focus()
+            table.item(selected, text="",
+                       values=(name_entry.get(), first_name_entry.get(), username_entry.get(), role_entry.get(),
+                               password_entry.get()))
+            name_entry.delete(0, tk.END)
+            first_name_entry.delete(0, tk.END)
+            username_entry.delete(0, tk.END)
+            role_entry.delete(0, tk.END)
+            password_entry.delete(0, tk.END)
+
+        def add_user():
+            def close_popup(window):
+                window.destroy()
+                add_new_user_button["state"] = tk.NORMAL
+            def open_secondary_window():
+                add_new_user_button["state"] = tk.DISABLED
+                secondary_window = tk.Toplevel()
+                secondary_window.title("Secondary Window")
+                secondary_window.config(width=300, height=200)
+                button_close = ttk.Button(
+                    secondary_window,
+                    text="Close window",
+                    command=lambda *_: close_popup(secondary_window)
+                )
+                button_close.place(x=75, y=75)
+
+            open_secondary_window()
+
+        select_button = tk.Button(fr, text="Select Record", command=select_record)
+        select_button.grid(row=4, column=3)
+
+        edit_button = tk.Button(fr, text="Edit ", command=update_record)
+        edit_button.grid(row=5, column=3)
+
+        add_new_user_button = tk.Button(fr, text="Add user", command=add_user)
+        add_new_user_button.grid(row=6, column=3)
+
+    def _init_my_account_frame(self, controller):
+        self.account_info = tk.Text(controller, bg="light yellow")
+        self.account_info.grid(row=0, column=0)
+        self.logout_button = ttk.Button(controller, text="Logout", command=self.logout_call)
+        self.logout_button.grid(row=1, column=0)
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -128,29 +261,39 @@ class AdminPage(tk.Frame):
         menu_manager_frame = ttk.Frame(notebook, width=720, height=400)
         report_frame = ttk.Frame(notebook, width=720, height=400)
 
-        # Account management
-        create_account_frame.pack(fill='both', expand=True)
+        # User management
+        self._init_user_management_frame(create_account_frame)
+
+        # Menu management
         menu_manager_frame.pack(fill='both', expand=True)
+
+        # Report management
         report_frame.pack(fill="both", expand=True)
 
         # My account
         my_account_frame.pack(fill="both", expand=True)
-        self.account_info = tk.Text(my_account_frame, height=50, width=75, bg="light yellow")
-        self.account_info.grid(row=0, column=0)
+        self._init_my_account_frame(my_account_frame)
 
         notebook.add(create_account_frame, text='Manage accounts')
         notebook.add(menu_manager_frame, text='Manage Menu')
         notebook.add(report_frame, text='Report section')
         notebook.add(my_account_frame, text='My_account')
 
-        self.logout_button = ttk.Button(my_account_frame, text="Logout", command=self.logout_call)
-        self.logout_button.grid(row=1, column=0)
-
     def logout_call(self):
         self.controller.show_login_page()
 
     def update_user_info(self):
+        self.account_info.delete(1.0, tk.END)
         self.account_info.insert(tk.END, str(self.controller.user))
+
+    def create_user_account(self):
+        pass
+
+    def update_menu(self):
+        pass
+
+    def generate_report(self):
+        pass
 
 
 class EmployeePage(tk.Frame):
@@ -175,3 +318,12 @@ class EmployeePage(tk.Frame):
 
     def logout_call(self):
         self.controller.show_login_page()
+
+    def create_order(self):
+        pass
+
+    def update_order(self):
+        pass
+
+    def update_order_price(self):
+        pass
