@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk
+from ttkthemes import ThemedTk
 from tkcalendar import *
 
 from oldies.core.bll.order_service import OrderService
@@ -9,6 +10,8 @@ from oldies.core.bll.user_service import UserService
 
 from oldies.core.persistance.repos.repo_factory import RepoFactory
 from oldies.core.entities.user import (Role, User)
+
+from oldies.core.ui.components import (TableView, ReportFrame)
 
 LARGEFONT = ("Verdana", 35)
 context = {
@@ -115,127 +118,59 @@ class LoginPage(tk.Frame):
 class AdminPage(tk.Frame):
 
     def _init_user_management_frame(self, controller):
-        scroll = tk.Scrollbar(controller)
-        scroll.grid(row=0, column=0)
-        table = ttk.Treeview(scroll, yscrollcommand=scroll.set, xscrollcommand=scroll.set)
-        table.grid(row=1, column=0)
+        TableView(controller, ("Name", "First_name", "Username", "Role", "Password"))
+        # def update_table_content():
+        #     users = self.controller.user_service.list()
+        #     iid = 1
+        #     for user in users:
+        #         table.insert(parent="", index="end", iid=iid, text="",
+        #                      values=(user.name, user.first_name, user.username, user.role))
+        #         iid += 1
+        #
+        # update_table_content()
+        #
+        # def select_record():
+        #     # clear entry boxes
+        #     name_entry.delete(0, tk.END)
+        #     first_name_entry.delete(0, tk.END)
+        #     username_entry.delete(0, tk.END)
+        #     role_entry.delete(0, tk.END)
+        #     password_entry.delete(0, tk.END)
+        #
+        #     # grab record
+        #     selected = table.focus()
+        #     # grab record values
+        #     values = table.item(selected, 'values')
+        #     # temp_label.config(text=selected
+        #
+        #     # user service call
+        #
+        #     # output to entry boxes
+        #     name_entry.insert(0, values[0])
+        #     first_name_entry.insert(0, values[1])
+        #     username_entry.insert(0, values[2])
+        #     role_entry.insert(0, values[3])
+        #
+        # def deselect_record():
+        #     for item in table.get_children():
+        #         table.selection_remove(item)
+        #     name_entry.delete(0, tk.END)
+        #     first_name_entry.delete(0, tk.END)
+        #     username_entry.delete(0, tk.END)
+        #     role_entry.delete(0, tk.END)
+        #     password_entry.delete(0, tk.END)
+        #
+        # def update_record():
+        #     selected = table.focus()
+        #     table.item(selected, text="",
+        #                values=(name_entry.get(), first_name_entry.get(), username_entry.get(), role_entry.get(),
+        #                        password_entry.get()))
+        #     name_entry.delete(0, tk.END)
+        #     first_name_entry.delete(0, tk.END)
+        #     username_entry.delete(0, tk.END)
+        #     role_entry.delete(0, tk.END)
+        #     password_entry.delete(0, tk.END)
 
-        scroll.config(command=table.yview)
-        scroll.config(command=table.xview)
-
-        # define our column
-        table['columns'] = ('Name', 'First_name', "Username", 'Role')
-
-        # format our column
-        table.column("#0", width=0, stretch=tk.NO)
-        table.column("Name", anchor=tk.CENTER)
-        table.column("First_name", anchor=tk.CENTER)
-        table.column("Username", anchor=tk.CENTER)
-        table.column("Role", anchor=tk.CENTER)
-
-        # Create Headings
-        table.heading("#0", text="", anchor=tk.CENTER)
-        table.heading("Name", text="Name", anchor=tk.CENTER)
-        table.heading("First_name", text="First_name", anchor=tk.CENTER)
-        table.heading("Username", text="Username", anchor=tk.CENTER)
-        table.heading("Role", text="Role", anchor=tk.CENTER)
-
-        fr = tk.Frame(controller)
-        fr.grid(row=2, column=0)
-
-        name = tk.Label(fr, text="Name")
-        name.grid(row=3, column=1)
-
-        first_name = tk.Label(fr, text="Firstname")
-        first_name.grid(row=3, column=2)
-
-        username = tk.Label(fr, text="Username")
-        username.grid(row=3, column=3)
-
-        role = tk.Label(fr, text="Role")
-        role.grid(row=3, column=4)
-
-        password = tk.Label(fr, text="Password")
-        password.grid(row=3, column=5)
-
-        name_entry = tk.Entry(fr)
-        name_entry.grid(row=1, column=1)
-
-        first_name_entry = tk.Entry(fr)
-        first_name_entry.grid(row=1, column=2)
-
-        username_entry = tk.Entry(fr)
-        username_entry.grid(row=1, column=3)
-
-        role_entry = tk.Entry(fr)
-        role_entry.grid(row=1, column=4)
-
-        password_entry = tk.Entry(fr)
-        password_entry.grid(row=1, column=5)
-
-        def update_table_content():
-            users = self.controller.user_service.list()
-            iid = 1
-            for user in users:
-                table.insert(parent="", index="end", iid=iid, text="",
-                             values=(user.name, user.first_name, user.username, user.role))
-                iid += 1
-
-        update_table_content()
-
-        def select_record():
-            # clear entry boxes
-            name_entry.delete(0, tk.END)
-            first_name_entry.delete(0, tk.END)
-            username_entry.delete(0, tk.END)
-            role_entry.delete(0, tk.END)
-            password_entry.delete(0, tk.END)
-
-            # grab record
-            selected = table.focus()
-            # grab record values
-            values = table.item(selected, 'values')
-            # temp_label.config(text=selected
-
-            # user service call
-
-            # output to entry boxes
-            name_entry.insert(0, values[0])
-            first_name_entry.insert(0, values[1])
-            username_entry.insert(0, values[2])
-            role_entry.insert(0, values[3])
-
-        def deselect_record():
-            for item in table.get_children():
-                table.selection_remove(item)
-            name_entry.delete(0, tk.END)
-            first_name_entry.delete(0, tk.END)
-            username_entry.delete(0, tk.END)
-            role_entry.delete(0, tk.END)
-            password_entry.delete(0, tk.END)
-
-        def update_record():
-            selected = table.focus()
-            table.item(selected, text="",
-                       values=(name_entry.get(), first_name_entry.get(), username_entry.get(), role_entry.get(),
-                               password_entry.get()))
-            name_entry.delete(0, tk.END)
-            first_name_entry.delete(0, tk.END)
-            username_entry.delete(0, tk.END)
-            role_entry.delete(0, tk.END)
-            password_entry.delete(0, tk.END)
-
-        select_button = tk.Button(fr, text="Select Record", command=select_record)
-        select_button.grid(row=4, column=3)
-
-        deselect_button = tk.Button(fr, text="Deselect Record", command=deselect_record)
-        deselect_button.grid(row=5, column=3)
-
-        edit_button = tk.Button(fr, text="Edit ", command=update_record)
-        edit_button.grid(row=6, column=3)
-
-        add_new_user_button = tk.Button(fr, text="Add user", command=print)
-        add_new_user_button.grid(row=7, column=3)
 
     def _init_my_account_frame(self, controller):
         self.account_info = tk.Text(controller, bg="light yellow")
@@ -244,157 +179,15 @@ class AdminPage(tk.Frame):
         self.logout_button.grid(row=1, column=0)
 
     def _init_menu_managemen_frame(self, controller):
-        scroll = tk.Scrollbar(controller)
-        scroll.grid(row=0, column=0)
-        table = ttk.Treeview(scroll, yscrollcommand=scroll.set, xscrollcommand=scroll.set)
-        table.grid(row=1, column=0)
-
-        scroll.config(command=table.yview)
-        scroll.config(command=table.xview)
-
-        # define our column
-        table['columns'] = ('Name', 'First_name', "Username", 'Role')
-
-        # format our column
-        table.column("#0", width=0, stretch=tk.NO)
-        table.column("Name", anchor=tk.CENTER)
-        table.column("First_name", anchor=tk.CENTER)
-        table.column("Username", anchor=tk.CENTER)
-        table.column("Role", anchor=tk.CENTER)
-
-        # Create Headings
-        table.heading("#0", text="", anchor=tk.CENTER)
-        table.heading("Name", text="Name", anchor=tk.CENTER)
-        table.heading("First_name", text="First_name", anchor=tk.CENTER)
-        table.heading("Username", text="Username", anchor=tk.CENTER)
-        table.heading("Role", text="Role", anchor=tk.CENTER)
-
-        fr = tk.Frame(controller)
-        fr.grid(row=2, column=0)
-
-        name = tk.Label(fr, text="Name")
-        name.grid(row=3, column=1)
-
-        first_name = tk.Label(fr, text="Firstname")
-        first_name.grid(row=3, column=2)
-
-        username = tk.Label(fr, text="Username")
-        username.grid(row=3, column=3)
-
-        role = tk.Label(fr, text="Role")
-        role.grid(row=3, column=4)
-
-        password = tk.Label(fr, text="Password")
-        password.grid(row=3, column=5)
-
-        name_entry = tk.Entry(fr)
-        name_entry.grid(row=1, column=1)
-
-        first_name_entry = tk.Entry(fr)
-        first_name_entry.grid(row=1, column=2)
-
-        username_entry = tk.Entry(fr)
-        username_entry.grid(row=1, column=3)
-
-        role_entry = tk.Entry(fr)
-        role_entry.grid(row=1, column=4)
-
-        password_entry = tk.Entry(fr)
-        password_entry.grid(row=1, column=5)
-
-        def update_table_content():
-            users = self.controller.user_service.list()
-            iid = 1
-            for user in users:
-                table.insert(parent="", index="end", iid=iid, text="",
-                             values=(user.name, user.first_name, user.username, user.role))
-                iid += 1
-
-        update_table_content()
-
-        def select_record():
-            # clear entry boxes
-            name_entry.delete(0, tk.END)
-            first_name_entry.delete(0, tk.END)
-            username_entry.delete(0, tk.END)
-            role_entry.delete(0, tk.END)
-            password_entry.delete(0, tk.END)
-
-            # grab record
-            selected = table.focus()
-            # grab record values
-            values = table.item(selected, 'values')
-            # temp_label.config(text=selected
-
-            # user service call
-
-            # output to entry boxes
-            name_entry.insert(0, values[0])
-            first_name_entry.insert(0, values[1])
-            username_entry.insert(0, values[2])
-            role_entry.insert(0, values[3])
-
-        def deselect_record():
-            for item in table.get_children():
-                table.selection_remove(item)
-            name_entry.delete(0, tk.END)
-            first_name_entry.delete(0, tk.END)
-            username_entry.delete(0, tk.END)
-            role_entry.delete(0, tk.END)
-            password_entry.delete(0, tk.END)
-
-        def update_record():
-            selected = table.focus()
-            table.item(selected, text="",
-                       values=(name_entry.get(), first_name_entry.get(), username_entry.get(), role_entry.get(),
-                               password_entry.get()))
-            name_entry.delete(0, tk.END)
-            first_name_entry.delete(0, tk.END)
-            username_entry.delete(0, tk.END)
-            role_entry.delete(0, tk.END)
-            password_entry.delete(0, tk.END)
-
-        select_button = tk.Button(fr, text="Select Record", command=select_record)
-        select_button.grid(row=4, column=3)
-
-        deselect_button = tk.Button(fr, text="Deselect Record", command=deselect_record)
-        deselect_button.grid(row=5, column=3)
-
-        edit_button = tk.Button(fr, text="Edit ", command=update_record)
-        edit_button.grid(row=6, column=3)
-
-        add_new_user_button = tk.Button(fr, text="Add user", command=print)
-        add_new_user_button.grid(row=7, column=3)
+        pass
 
     def _init_report_frame(self, controller):
-        begin_cal = Calendar(controller,
-                             selectmode="day",
-                             year=2021,
-                             month=2,
-                             day=3)
-        end_cal = Calendar(controller,
-                           selectmode="day",
-                           year=2021,
-                           month=2,
-                           day=3)
+        self.report_frame = ReportFrame(controller, [
+            ("begin", "cal"),
+            ("end", "cal"),
+            ("format", "frmt"),
+        ], ("xml", "csv"))
 
-        export_button = tk.Button(controller, text="Export")
-        choices = ['CSV', 'XML']
-        variable = tk.StringVar()
-        variable.set("CSV")
-        format_options = tk.OptionMenu(controller, variable, *choices)
-
-        begin_label = tk.Label(controller, text="Begin Date")
-        end_label = tk.Label(controller, text="End Date")
-        format_label = tk.Label(controller, text="Format")
-
-        begin_label.grid(row=0, column=1)
-        end_label.grid(row=0, column=2)
-        format_label.grid(row=0, column=3)
-        begin_cal.grid(row=1, column=1)
-        end_cal.grid(row=1, column=2)
-        format_options.grid(row=1, column=3)
-        export_button.grid(row=1, column=4)
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -444,127 +237,7 @@ class AdminPage(tk.Frame):
 
 class EmployeePage(tk.Frame):
     def _init_order_management_frame(self, controller):
-        scroll = tk.Scrollbar(controller)
-        scroll.grid(row=0, column=0)
-        table = ttk.Treeview(scroll, yscrollcommand=scroll.set, xscrollcommand=scroll.set)
-        table.grid(row=1, column=0)
-
-        scroll.config(command=table.yview)
-        scroll.config(command=table.xview)
-
-        # define our column
-        table['columns'] = ('Name', 'First_name', "Username", 'Role')
-
-        # format our column
-        table.column("#0", width=0, stretch=tk.NO)
-        table.column("Name", anchor=tk.CENTER)
-        table.column("First_name", anchor=tk.CENTER)
-        table.column("Username", anchor=tk.CENTER)
-        table.column("Role", anchor=tk.CENTER)
-
-        # Create Headings
-        table.heading("#0", text="", anchor=tk.CENTER)
-        table.heading("Name", text="Name", anchor=tk.CENTER)
-        table.heading("First_name", text="First_name", anchor=tk.CENTER)
-        table.heading("Username", text="Username", anchor=tk.CENTER)
-        table.heading("Role", text="Role", anchor=tk.CENTER)
-
-        fr = tk.Frame(controller)
-        fr.grid(row=2, column=0)
-
-        name = tk.Label(fr, text="Name")
-        name.grid(row=3, column=1)
-
-        first_name = tk.Label(fr, text="Firstname")
-        first_name.grid(row=3, column=2)
-
-        username = tk.Label(fr, text="Username")
-        username.grid(row=3, column=3)
-
-        role = tk.Label(fr, text="Role")
-        role.grid(row=3, column=4)
-
-        password = tk.Label(fr, text="Password")
-        password.grid(row=3, column=5)
-
-        name_entry = tk.Entry(fr)
-        name_entry.grid(row=1, column=1)
-
-        first_name_entry = tk.Entry(fr)
-        first_name_entry.grid(row=1, column=2)
-
-        username_entry = tk.Entry(fr)
-        username_entry.grid(row=1, column=3)
-
-        role_entry = tk.Entry(fr)
-        role_entry.grid(row=1, column=4)
-
-        password_entry = tk.Entry(fr)
-        password_entry.grid(row=1, column=5)
-
-        def update_table_content():
-            users = self.controller.user_service.list()
-            iid = 1
-            for user in users:
-                table.insert(parent="", index="end", iid=iid, text="",
-                             values=(user.name, user.first_name, user.username, user.role))
-                iid += 1
-
-        update_table_content()
-
-        def select_record():
-            # clear entry boxes
-            name_entry.delete(0, tk.END)
-            first_name_entry.delete(0, tk.END)
-            username_entry.delete(0, tk.END)
-            role_entry.delete(0, tk.END)
-            password_entry.delete(0, tk.END)
-
-            # grab record
-            selected = table.focus()
-            # grab record values
-            values = table.item(selected, 'values')
-            # temp_label.config(text=selected
-
-            # user service call
-
-            # output to entry boxes
-            name_entry.insert(0, values[0])
-            first_name_entry.insert(0, values[1])
-            username_entry.insert(0, values[2])
-            role_entry.insert(0, values[3])
-
-        def deselect_record():
-            for item in table.get_children():
-                table.selection_remove(item)
-            name_entry.delete(0, tk.END)
-            first_name_entry.delete(0, tk.END)
-            username_entry.delete(0, tk.END)
-            role_entry.delete(0, tk.END)
-            password_entry.delete(0, tk.END)
-
-        def update_record():
-            selected = table.focus()
-            table.item(selected, text="",
-                       values=(name_entry.get(), first_name_entry.get(), username_entry.get(), role_entry.get(),
-                               password_entry.get()))
-            name_entry.delete(0, tk.END)
-            first_name_entry.delete(0, tk.END)
-            username_entry.delete(0, tk.END)
-            role_entry.delete(0, tk.END)
-            password_entry.delete(0, tk.END)
-
-        select_button = tk.Button(fr, text="Select Record", command=select_record)
-        select_button.grid(row=4, column=3)
-
-        deselect_button = tk.Button(fr, text="Deselect Record", command=deselect_record)
-        deselect_button.grid(row=5, column=3)
-
-        edit_button = tk.Button(fr, text="Edit ", command=update_record)
-        edit_button.grid(row=6, column=3)
-
-        add_new_user_button = tk.Button(fr, text="Add user", command=print)
-        add_new_user_button.grid(row=7, column=3)
+        pass
 
     def _init_my_account_frame(self, controller):
         self.account_info = tk.Text(controller, bg="light yellow")
