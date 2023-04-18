@@ -1,8 +1,10 @@
+import os
+import json
+import traceback
 import tkinter as tk
-from tkinter import messagebox
 from tkinter import ttk
-from ttkthemes import ThemedTk
-from tkcalendar import *
+from tkinter import messagebox
+from pathlib import Path
 
 from oldies.core.bll.order_service import OrderService
 from oldies.core.bll.menu_service import MenuService
@@ -11,25 +13,33 @@ from oldies.core.bll.user_service import UserService
 from oldies.core.persistance.repos.repo_factory import RepoFactory
 from oldies.core.entities.user import (Role, User)
 
-from oldies.core.ui.components import (TableView, ReportFrame)
+from oldies.core.ui.components import (UsersTable, MenuTable, OrderTable, ReportFrame)
 
 LARGEFONT = ("Verdana", 35)
-context = {
-    "database_uri": "mongodb://root:hello@localhost:27017/",
-    "db": "mongo",
-}
+
+
+def load_context(path: Path):
+    try:
+        with open(path, "r") as f:
+            context = json.load(f)
+        return context
+    except:
+        print(f"Failed when loading the context {traceback.format_exc()}")
+        raise
 
 
 class OldiesApp(tk.Tk):
 
-    def _init_service(self):
+    def _init_service(self) -> None:
         self.user = None
-        self.repo_factory = RepoFactory(context)
+        self.repo_factory = RepoFactory(self.context)
         self.order_service = OrderService(order_repo=self.repo_factory.get_order_repo())
         self.menu_service = MenuService(menu_repo=self.repo_factory.get_dish_repo())
         self.user_service = UserService(user_repo=self.repo_factory.get_user_repo())
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, app_context=None, **kwargs):
+        self.context = app_context
+
         self._init_service()
         tk.Tk.__init__(self, *args, **kwargs)
 
@@ -41,10 +51,23 @@ class OldiesApp(tk.Tk):
 
         self.frames = {}
 
-        for F in (LoginPage, AdminPage, EmployeePage):
-            frame = F(container, self)
-            self.frames[F] = frame
-            frame.grid(row=0, column=0, sticky="nsew")
+        self.frames[LoginPage] = LoginPage(container, self)
+        self.frames[LoginPage].grid(row=0, column=0, sticky="nsew")
+        self.frames[LoginPage].add_service("user", self.user_service)
+
+        self.frames[AdminPage] = AdminPage(container, self)
+        self.frames[AdminPage].grid(row=0, column=0, sticky="nsew")
+        self.frames[AdminPage].add_service("user", self.user_service)
+        self.frames[AdminPage].add_service("menu", self.menu_service)
+        self.frames[AdminPage].add_service("order", self.order_service)
+        self.frames[AdminPage].users_table.add_button("refresh", 6, 6, "refresh", self.frames[AdminPage].refresh_users_table)
+
+        self.frames[EmployeePage] = EmployeePage(container, self)
+        self.frames[EmployeePage].grid(row=0, column=0, sticky="nsew")
+        self.frames[EmployeePage].add_service("user", self.user_service)
+        self.frames[EmployeePage].add_service("menu", self.menu_service)
+        self.frames[EmployeePage].add_service("order", self.order_service)
+
         self.show_frame(LoginPage)
 
     def login(self, username, password):
@@ -67,7 +90,16 @@ class OldiesApp(tk.Tk):
         frame.tkraise()
 
 
-class LoginPage(tk.Frame):
+class Page(tk.Frame):
+    def add_service(self, name, service):
+        try:
+            self.__getitem__("services")
+        except:
+            self.services = {}
+        self.services[name] = service
+
+
+class LoginPage(Page):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
@@ -114,63 +146,10 @@ class LoginPage(tk.Frame):
             self.password_entry.delete(0, tk.END)
 
 
-# second window frame page1
-class AdminPage(tk.Frame):
+class AdminPage(Page):
 
     def _init_user_management_frame(self, controller):
-        TableView(controller, ("Name", "First_name", "Username", "Role", "Password"))
-        # def update_table_content():
-        #     users = self.controller.user_service.list()
-        #     iid = 1
-        #     for user in users:
-        #         table.insert(parent="", index="end", iid=iid, text="",
-        #                      values=(user.name, user.first_name, user.username, user.role))
-        #         iid += 1
-        #
-        # update_table_content()
-        #
-        # def select_record():
-        #     # clear entry boxes
-        #     name_entry.delete(0, tk.END)
-        #     first_name_entry.delete(0, tk.END)
-        #     username_entry.delete(0, tk.END)
-        #     role_entry.delete(0, tk.END)
-        #     password_entry.delete(0, tk.END)
-        #
-        #     # grab record
-        #     selected = table.focus()
-        #     # grab record values
-        #     values = table.item(selected, 'values')
-        #     # temp_label.config(text=selected
-        #
-        #     # user service call
-        #
-        #     # output to entry boxes
-        #     name_entry.insert(0, values[0])
-        #     first_name_entry.insert(0, values[1])
-        #     username_entry.insert(0, values[2])
-        #     role_entry.insert(0, values[3])
-        #
-        # def deselect_record():
-        #     for item in table.get_children():
-        #         table.selection_remove(item)
-        #     name_entry.delete(0, tk.END)
-        #     first_name_entry.delete(0, tk.END)
-        #     username_entry.delete(0, tk.END)
-        #     role_entry.delete(0, tk.END)
-        #     password_entry.delete(0, tk.END)
-        #
-        # def update_record():
-        #     selected = table.focus()
-        #     table.item(selected, text="",
-        #                values=(name_entry.get(), first_name_entry.get(), username_entry.get(), role_entry.get(),
-        #                        password_entry.get()))
-        #     name_entry.delete(0, tk.END)
-        #     first_name_entry.delete(0, tk.END)
-        #     username_entry.delete(0, tk.END)
-        #     role_entry.delete(0, tk.END)
-        #     password_entry.delete(0, tk.END)
-
+        self.users_table = UsersTable(controller)
 
     def _init_my_account_frame(self, controller):
         self.account_info = tk.Text(controller, bg="light yellow")
@@ -178,8 +157,8 @@ class AdminPage(tk.Frame):
         self.logout_button = ttk.Button(controller, text="Logout", command=self.logout_call)
         self.logout_button.grid(row=1, column=0)
 
-    def _init_menu_managemen_frame(self, controller):
-        pass
+    def _init_menu_management_frame(self, controller):
+        self.menu_table = MenuTable(controller)
 
     def _init_report_frame(self, controller):
         self.report_frame = ReportFrame(controller, [
@@ -187,7 +166,6 @@ class AdminPage(tk.Frame):
             ("end", "cal"),
             ("format", "frmt"),
         ], ("xml", "csv"))
-
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -205,7 +183,7 @@ class AdminPage(tk.Frame):
         self._init_user_management_frame(create_account_frame)
 
         # Menu management
-        self._init_menu_managemen_frame(menu_manager_frame)
+        self._init_menu_management_frame(menu_manager_frame)
 
         # Report management
         self._init_report_frame(report_frame)
@@ -225,6 +203,12 @@ class AdminPage(tk.Frame):
         self.account_info.delete(1.0, tk.END)
         self.account_info.insert(tk.END, str(self.controller.user))
 
+    def refresh_users_table(self):
+        self.users_table.delete_all()
+        users = self.services["user"].list()
+        for user in users:
+            self.users_table.insert_user(user)
+
     def create_user_account(self):
         pass
 
@@ -235,9 +219,9 @@ class AdminPage(tk.Frame):
         pass
 
 
-class EmployeePage(tk.Frame):
+class EmployeePage(Page):
     def _init_order_management_frame(self, controller):
-        pass
+        self.order_table = OrderTable(controller)
 
     def _init_my_account_frame(self, controller):
         self.account_info = tk.Text(controller, bg="light yellow")

@@ -1,0 +1,4 @@
+{
+    "database_uri": "mongodb://root:hello@localhost:27017/",
+    "db": "mongo"
+}

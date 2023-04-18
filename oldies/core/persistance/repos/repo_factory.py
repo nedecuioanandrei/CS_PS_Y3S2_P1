@@ -12,10 +12,10 @@ class RepoFactory:
         if self.context["db"] == "mongo":
             return UserMongoRepo(uri=self.context["database_uri"])
 
-    def get_dish_repo(self):
+    def get_dish_repo(self) -> IRepo:
         if self.context["db"] == "mongo":
             return DishMongoRepo(uri=self.context["database_uri"])
 
-    def get_order_repo(self):
+    def get_order_repo(self) -> IRepo:
         if self.context["db"] == "mongo":
             return OrderMongoRepo(uri=self.context["database_uri"])

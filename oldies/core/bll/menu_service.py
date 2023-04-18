@@ -10,4 +10,3 @@ class MenuService:
 
     def add_dish(self, name, price, quantity):
         pass
-

@@ -19,3 +19,22 @@ db.users.insert([
         "role": "employee",
     }
 ])
+
+db.dishes.insert([
+	{
+		"name": "Ciorba radauteana",
+		"price": 23,
+		"stock": 13,
+	},
+	{
+		"name": "Fasole batuta",
+		"price": 1,
+		"stock": 900,
+	},
+	{
+		"name": "Ridiche cu branza",
+		"price": 2,
+		"stock": 2,
+	}
+
+])

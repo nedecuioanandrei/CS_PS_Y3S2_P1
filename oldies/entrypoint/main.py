@@ -1,9 +1,10 @@
 import sys
-from oldies.core.ui.main_app import OldiesApp
+from oldies.core.ui.main_app import OldiesApp, load_context
 
 
 def main(argv=None):
-    app = OldiesApp()
+    context = load_context()
+    app = OldiesApp(app_context=context)
     app.mainloop()
 
 
