@@ -10,3 +10,6 @@ class MenuService:
 
     def add_dish(self, name, price, quantity):
         pass
+
+    def list(self):
+        return self.menu_repo.list()

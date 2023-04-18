@@ -21,7 +21,7 @@ class User:
         self.role = role
 
     def as_tuple(self):
-        return self.name, self.first_name, self.username, self.password, self.role
+        return self.name, self.first_name, self.username, self.role, self.password
 
     def __str__(self):
         return f"Name: {self.name}\nFirstname: {self.first_name}\nUsername: {self.username}\nRole: {self.role}\n"

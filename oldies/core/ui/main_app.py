@@ -1,10 +1,8 @@
-import os
 import json
 import traceback
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
-from pathlib import Path
 
 from oldies.core.bll.order_service import OrderService
 from oldies.core.bll.menu_service import MenuService
@@ -13,12 +11,12 @@ from oldies.core.bll.user_service import UserService
 from oldies.core.persistance.repos.repo_factory import RepoFactory
 from oldies.core.entities.user import (Role, User)
 
-from oldies.core.ui.components import (UsersTable, MenuTable, OrderTable, ReportFrame)
+from oldies.core.ui.components import (UsersTable, MenuTable, OrderTable, OrderReportFrame)
 
 LARGEFONT = ("Verdana", 35)
 
 
-def load_context(path: Path):
+def load_context(path):
     try:
         with open(path, "r") as f:
             context = json.load(f)
@@ -30,8 +28,7 @@ def load_context(path: Path):
 
 class OldiesApp(tk.Tk):
 
-    def _init_service(self) -> None:
-        self.user = None
+    def _init_services(self) -> None:
         self.repo_factory = RepoFactory(self.context)
         self.order_service = OrderService(order_repo=self.repo_factory.get_order_repo())
         self.menu_service = MenuService(menu_repo=self.repo_factory.get_dish_repo())
@@ -39,40 +36,38 @@ class OldiesApp(tk.Tk):
 
     def __init__(self, *args, app_context=None, **kwargs):
         self.context = app_context
+        self._init_services()
 
-        self._init_service()
         tk.Tk.__init__(self, *args, **kwargs)
 
         container = tk.Frame(self)
         container.pack(side="top", fill="both", expand=True)
-
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
 
         self.frames = {}
-
-        self.frames[LoginPage] = LoginPage(container, self)
+        self.frames[LoginPage] = LoginPage(container, self, self.show_current_frame,
+                                           self.user_service)
         self.frames[LoginPage].grid(row=0, column=0, sticky="nsew")
-        self.frames[LoginPage].add_service("user", self.user_service)
 
-        self.frames[AdminPage] = AdminPage(container, self)
+        self.frames[AdminPage] = AdminPage(container, self, self.show_login_page, self.user_service, self.menu_service,
+                                           self.order_service)
         self.frames[AdminPage].grid(row=0, column=0, sticky="nsew")
-        self.frames[AdminPage].add_service("user", self.user_service)
-        self.frames[AdminPage].add_service("menu", self.menu_service)
-        self.frames[AdminPage].add_service("order", self.order_service)
-        self.frames[AdminPage].users_table.add_button("refresh", 6, 6, "refresh", self.frames[AdminPage].refresh_users_table)
 
-        self.frames[EmployeePage] = EmployeePage(container, self)
+        self.frames[EmployeePage] = EmployeePage(container, self, self.user_service, self.menu_service,
+                                                 self.order_service)
         self.frames[EmployeePage].grid(row=0, column=0, sticky="nsew")
-        self.frames[EmployeePage].add_service("user", self.user_service)
-        self.frames[EmployeePage].add_service("menu", self.menu_service)
-        self.frames[EmployeePage].add_service("order", self.order_service)
 
         self.show_frame(LoginPage)
 
-    def login(self, username, password):
-        print(f"{username=} {password=}")
-        self.user = self.user_service.login(username, password)
+    def show_current_frame(self):
+        if self.frames[LoginPage].get_user_current_role() == Role.ADMIN:
+            self.frames[AdminPage].user = self.frames[LoginPage].get_user()
+            self.show_admin_page()
+        if self.frames[LoginPage].get_user_current_role() == Role.ADMIN:
+            self.frames[EmployeePage].user = self.frames[LoginPage].get_user()
+            self.show_employee_page()
+        self.show_login_page()
 
     def show_admin_page(self):
         self.frames[AdminPage].update_user_info()
@@ -90,23 +85,20 @@ class OldiesApp(tk.Tk):
         frame.tkraise()
 
 
-class Page(tk.Frame):
-    def add_service(self, name, service):
-        try:
-            self.__getitem__("services")
-        except:
-            self.services = {}
-        self.services[name] = service
-
-
-class LoginPage(Page):
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
+class LoginPage(tk.Frame):
+    def __init__(self, parent, controller, login_callback, user_service):
+        self.user = None
+        self.login_callback = login_callback
         self.controller = controller
+        self.user_service = user_service
 
+        tk.Frame.__init__(self, parent)
+
+        # title label
         label = ttk.Label(self, text="Welcome to Oldies-Apahida", font=LARGEFONT)
         label.grid(row=0, column=1, padx=10, pady=10)
 
+        # username/password entries
         username_label = ttk.Label(self, text="username", font=LARGEFONT)
         username_label.grid(row=1, column=1)
         self.username_entry = ttk.Entry(self)
@@ -120,23 +112,22 @@ class LoginPage(Page):
         login_button = ttk.Button(self, text="Login", command=self.login_call)
         login_button.grid(row=3, column=3, padx=10, pady=10)
 
+        # remember me logic
         self.remember_me = tk.BooleanVar()
         self.remember_me.set(False)
-        self.remember_me.trace('w', lambda *_: print("The value was changed"))
         self.remember_me_checkbox = tk.Checkbutton(self, text='Remember me', variable=self.remember_me,
                                                    command=lambda *_: self.remember_me.get)
         self.remember_me_checkbox.grid(row=3, column=2)
 
     def login_call(self):
-        print(
-            f"Vreau sa ma logez ca \nusername:{self.username_entry.get()}\npassword:{self.password_entry.get()}\nremember_me:{self.remember_me.get()}")
-        self.controller.login(self.username_entry.get(), self.password_entry.get())
+        self.user = self.user_service.login(self.username_entry.get(), self.password_entry.get())
 
-        if self.controller.user is None:
+        if self.user is None:
             messagebox.showerror(title="Login Error", message="Wrong username/password")
+            self.user = None
             return
 
-        if self.controller.user.role == Role.EMPLOYEE:
+        if self.user.role == Role.EMPLOYEE:
             self.controller.show_employee_page()
         else:
             self.controller.show_admin_page()
@@ -145,11 +136,19 @@ class LoginPage(Page):
             self.username_entry.delete(0, tk.END)
             self.password_entry.delete(0, tk.END)
 
+        self.login_callback()
 
-class AdminPage(Page):
+    def get_user(self):
+        return self.user
+
+    def get_user_current_role(self):
+        return self.user.role
+
+
+class AdminPage(tk.Frame):
 
     def _init_user_management_frame(self, controller):
-        self.users_table = UsersTable(controller)
+        self.users_table = UsersTable(controller, self.create_user_account, self.delete_user_account)
 
     def _init_my_account_frame(self, controller):
         self.account_info = tk.Text(controller, bg="light yellow")
@@ -161,15 +160,16 @@ class AdminPage(Page):
         self.menu_table = MenuTable(controller)
 
     def _init_report_frame(self, controller):
-        self.report_frame = ReportFrame(controller, [
-            ("begin", "cal"),
-            ("end", "cal"),
-            ("format", "frmt"),
-        ], ("xml", "csv"))
+        self.report_frame = OrderReportFrame(controller)
 
-    def __init__(self, parent, controller):
+    def __init__(self, parent, controller, logout_call, user_service, menu_service, order_service):
         tk.Frame.__init__(self, parent)
+        self.user = None
         self.controller = controller
+        self.logout_call = logout_call
+        self.user_service = user_service
+        self.menu_service = menu_service
+        self.order_service = order_service
 
         notebook = ttk.Notebook(self)
         notebook.pack(pady=10, expand=True)
@@ -196,30 +196,54 @@ class AdminPage(Page):
         notebook.add(report_frame, text='Report section')
         notebook.add(my_account_frame, text='My_account')
 
-    def logout_call(self):
-        self.controller.show_login_page()
+        self.refresh_users_table()
+        self.refresh_menu()
 
     def update_user_info(self):
         self.account_info.delete(1.0, tk.END)
-        self.account_info.insert(tk.END, str(self.controller.user))
+        self.account_info.insert(tk.END, str(self.user))
 
     def refresh_users_table(self):
         self.users_table.delete_all()
-        users = self.services["user"].list()
+        users = self.user_service.list()
         for user in users:
-            self.users_table.insert_user(user)
+            self.users_table.insert(user)
 
     def create_user_account(self):
-        pass
+        record = self.users_table.get_selected_record()
+        new_user = User(
+            name=record["Name"],
+            first_name=record["First_name"],
+            username=record["Username"],
+            role=record["Role"],
+            password=record["Password"],
+        )
+        self.user_service.create_user(new_user)
+        self.refresh_users_table()
 
-    def update_menu(self):
-        pass
+    def delete_user_account(self):
+        record = self.users_table.get_selected_record()
+        user = User(
+            name=record["Name"],
+            first_name=record["First_name"],
+            username=record["Username"],
+            role=record["Role"],
+            password=record["Password"],
+        )
+        self.user_service.delete_user(user)
+        self.refresh_users_table()
+
+    def refresh_menu(self):
+        self.menu_table.delete_all()
+        dishes = self.menu_service.list()
+        for dish in dishes:
+            self.menu_table.insert(dish)
 
     def generate_report(self):
-        pass
+        self.report_frame.generate_report()
 
 
-class EmployeePage(Page):
+class EmployeePage(tk.Frame):
     def _init_order_management_frame(self, controller):
         self.order_table = OrderTable(controller)
 
@@ -229,9 +253,12 @@ class EmployeePage(Page):
         self.logout_button = ttk.Button(controller, text="Logout", command=self.logout_call)
         self.logout_button.grid(row=1, column=0)
 
-    def __init__(self, parent, controller):
+    def __init__(self, parent, controller, user_service, menu_service, order_service):
         tk.Frame.__init__(self, parent)
         self.controller = controller
+        self.user_service = user_service
+        self.menu_service = menu_service
+        self.order_service = order_service
 
         notebook = ttk.Notebook(self)
         notebook.pack(pady=10, expand=True)

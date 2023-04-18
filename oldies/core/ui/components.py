@@ -3,59 +3,6 @@ from tkinter import ttk
 from tkcalendar import *
 
 
-# def update_table_content():
-#     users = self.controller.user_service.list()
-#     iid = 1
-#     for user in users:
-#         table.insert(parent="", index="end", iid=iid, text="",
-#                      values=(user.name, user.first_name, user.username, user.role))
-#         iid += 1
-#
-# update_table_content()
-#
-# def select_record():
-#     # clear entry boxes
-#     name_entry.delete(0, tk.END)
-#     first_name_entry.delete(0, tk.END)
-#     username_entry.delete(0, tk.END)
-#     role_entry.delete(0, tk.END)
-#     password_entry.delete(0, tk.END)
-#
-#     # grab record
-#     selected = table.focus()
-#     # grab record values
-#     values = table.item(selected, 'values')
-#     # temp_label.config(text=selected
-#
-#     # user service call
-#
-#     # output to entry boxes
-#     name_entry.insert(0, values[0])
-#     first_name_entry.insert(0, values[1])
-#     username_entry.insert(0, values[2])
-#     role_entry.insert(0, values[3])
-#
-# def deselect_record():
-#     for item in table.get_children():
-#         table.selection_remove(item)
-#     name_entry.delete(0, tk.END)
-#     first_name_entry.delete(0, tk.END)
-#     username_entry.delete(0, tk.END)
-#     role_entry.delete(0, tk.END)
-#     password_entry.delete(0, tk.END)
-#
-# def update_record():
-#     selected = table.focus()
-#     table.item(selected, text="",
-#                values=(name_entry.get(), first_name_entry.get(), username_entry.get(), role_entry.get(),
-#                        password_entry.get()))
-#     name_entry.delete(0, tk.END)
-#     first_name_entry.delete(0, tk.END)
-#     username_entry.delete(0, tk.END)
-#     role_entry.delete(0, tk.END)
-#     password_entry.delete(0, tk.END)
-
-
 class TableView(tk.Frame):
     def __init__(self, controller, header=None):
         super().__init__()
@@ -89,7 +36,9 @@ class TableView(tk.Frame):
             self.__getattribute__(f"{entry}_label").grid(row=3, column=idx + 1)
             self.__setattr__(f"{entry}_entry", tk.Entry(self.entry_frame))
             self.__getattribute__(f"{entry}_entry").grid(row=1, column=idx + 1)
-            self.__setattr__(f"get_{entry}", lambda *_: self.__getattribute__(f"{entry}_entry").get())
+            self.__setattr__(f"get_{entry}", self.__getattribute__(f"{entry}_entry").get)
+        self.add_button("select", 4, 2, "select", self.select_record)
+        self.add_button("deselect", 4, 3, "deselect", self.deselect_record)
 
     def add_button(self, tag, row, column, text, command):
         """Add a new button."""
@@ -102,11 +51,21 @@ class TableView(tk.Frame):
 
     def select_record(self):
         """Load current selected record."""
-        raise NotImplementedError()
+        for idx, entry in enumerate(self.header):
+            self.__getattribute__(f"{entry}_entry").delete(0, tk.END)
+
+        selected = self.table.focus()
+        values = self.table.item(selected, 'values')
+
+        for idx, entry in enumerate(self.header):
+            self.__getattribute__(f"{entry}_entry").insert(0, values[idx])
 
     def deselect_record(self):
         """Discard current selection."""
-        raise NotImplementedError()
+        for idx, entry in enumerate(self.header):
+            self.__getattribute__(f"{entry}_entry").delete(0, tk.END)
+        if len(self.table.selection()) > 0:
+            self.table.selection_remove(self.table.selection()[0])
 
     def get_selected_record(self) -> dict:
         """Get the content of the selected record."""
@@ -119,13 +78,16 @@ class TableView(tk.Frame):
         for item in self.table.get_children():
             self.table.delete(item)
 
+    def insert(self, item):
+        self.table.insert("", 'end', iid=None,
+                          values=item.as_tuple())
+
 
 class UsersTable(TableView):
-    def __init__(self, controller):
+    def __init__(self, controller, create_user_callback, delete_user_callback):
         super().__init__(controller, ("Name", "First_name", "Username", "Role", "Password"))
-
-    def insert_user(self, user):
-        self.table.insert("", "end", iid=None, values=user.as_tuple())
+        super().add_button("create", 4, 1, "create", create_user_callback)
+        super().add_button("delete", 4, 4, "delete", delete_user_callback)
 
 
 class MenuTable(TableView):
@@ -166,12 +128,19 @@ class ReportFrame(tk.Frame):
             # create label
             self.__setattr__(f"{entry}_label", tk.Label(self.controller, text=f"{entry}"))
             self.__getattribute__(f"{entry}_label").grid(row=0, column=idx + 1)
+
             # create entry
             self.__setattr__(f"{entry}_entry", self._get_entry(tp))
             self.__getattribute__(f"{entry}_entry").grid(row=1, column=idx + 1)
             self.__setattr__(f"get_{entry}", lambda *_: self.__getattribute__(f"{entry}_entry").get())
 
-    def generate_report(self, data, frmt, dst):
+        self.generate_button = ttk.Button(self.controller, text="Generate", command=self.generate_report)
+        self.generate_button.grid(row=2, column=2)
+
+    def get_data(self):
+        raise NotImplementedError()
+
+    def generate_report(self):
         raise NotImplementedError()
 
 
@@ -182,3 +151,6 @@ class OrderReportFrame(ReportFrame):
             ("end", "cal"),
             ("format", "frmt"),
         ], ("xml", "csv"))
+
+    def generate_report(self):
+        print("Ana are mere")

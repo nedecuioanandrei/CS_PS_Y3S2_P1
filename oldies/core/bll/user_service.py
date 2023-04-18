@@ -13,8 +13,16 @@ class UserService:
     def login(self, username, password) -> User:
         return self.user_repo.find(username, self._encrypt_password(password))
 
-    def create_user(self, user: User, password):
-        return self.user_repo.insert(user, self._encrypt_password(password))
+    def create_user(self, user: User):
+        user.password = self._encrypt_password(user.password)
+        if user.role == "admin":
+            user.role = Role.ADMIN
+        else:
+            user.role = Role.EMPLOYEE
+        return self.user_repo.insert(user)
+
+    def delete_user(self, user: User):
+        return self.user_repo.delete(user)
 
     def update_user(self):
         pass

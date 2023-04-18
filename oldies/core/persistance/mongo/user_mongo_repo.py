@@ -26,8 +26,8 @@ class UserMongoRepo(IRepo):
         except:
             return None
 
-    def find(self, username, pass_sha256) -> User:
-        user_record = self.users.find({"username": username, "pass_sha256": pass_sha256})
+    def find(self, username, password) -> User:
+        user_record = self.users.find({"username": username, "password": password})
         try:
             user_record = user_record[0]
             return User(
@@ -76,5 +76,12 @@ class UserMongoRepo(IRepo):
             }
         )
 
-    def delete(self, user_id):
-        self.users.delete_one({"_id": user_id})
+    def delete(self, user: User):
+        self.users.delete_one(
+            {
+                "name": user.name,
+                "first_name": user.first_name,
+                "username": user.username,
+                "role": "admin" if user.role == Role.ADMIN else "employee"
+            }
+        )
