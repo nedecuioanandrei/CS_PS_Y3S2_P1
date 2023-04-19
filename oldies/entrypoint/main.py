@@ -1,11 +1,8 @@
-from oldies.core.ui.main_app import OldiesApp, load_context
+from oldies.core.ui.main_app import OldiesApp
 
 
 def main():
-    import os
-    path = os.path.join(os.getcwd(), "context.json")
-    context = load_context(path)
-    app = OldiesApp(app_context=context)
+    app = OldiesApp()
     app.mainloop()
 
 

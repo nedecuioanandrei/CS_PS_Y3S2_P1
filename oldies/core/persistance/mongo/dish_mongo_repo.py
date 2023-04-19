@@ -12,8 +12,8 @@ class DishMongoRepo(IRepo):
         self.db = self.client["OldiesApahida"]
         self.dishes = self.db["dishes"]
 
-    def find(self, dish_id):
-        dish_record = self.dishes.find({"_id": dish_id})
+    def find(self, query):
+        dish_record = self.dishes.find(query)
         try:
             dish_record = dish_record[0]
             return Dish(

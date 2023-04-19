@@ -2,7 +2,7 @@ class MenuService:
     def __init__(self, menu_repo):
         self.menu_repo = menu_repo
 
-    def update_price(self, item_id, new_price):
+    def update_price(self, dish, new_price):
         pass
 
     def remove_dish(self, item_id):
